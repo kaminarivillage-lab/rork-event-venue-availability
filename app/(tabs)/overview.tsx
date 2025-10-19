@@ -119,6 +119,98 @@ export default function OverviewScreen() {
         <Text style={styles.welcomeText}>Overview</Text>
         <Text style={styles.subtitleText}>Your venue at a glance</Text>
 
+        {upcomingEvents.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderRow}>
+                <Calendar size={20} color={AutumnColors.sage} />
+                <Text style={styles.sectionTitle}>Upcoming Events</Text>
+              </View>
+              <Text style={styles.sectionCount}>{upcomingEvents.length}</Text>
+            </View>
+            <View style={styles.sectionContent}>
+              {upcomingEvents.map((event) => {
+                const isMeeting = event.eventType === 'meetings';
+                return (
+                  <TouchableOpacity
+                    key={event.id}
+                    style={styles.eventItem}
+                    onPress={() => handleEventPress(event)}
+                  >
+                    <View style={styles.eventItemLeft}>
+                      <View style={styles.eventDateBadge}>
+                        <Text style={styles.eventDateMonth}>
+                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
+                        </Text>
+                        <Text style={styles.eventDateDay}>
+                          {new Date(event.date).getDate()}
+                        </Text>
+                      </View>
+                      <View style={styles.eventItemInfo}>
+                        <Text style={styles.eventItemName}>{event.name}</Text>
+                        <Text style={styles.eventItemType}>
+                          {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
+                        </Text>
+                        {event.timeline && (
+                          <Text style={styles.eventItemTime}>
+                            {event.timeline.startTime} - {event.timeline.endTime}
+                          </Text>
+                        )}
+                        {isMeeting && event.meetingDetails && (
+                          <Text style={styles.eventItemTime}>
+                            {event.meetingDetails.meetingTime}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
+                    {!isMeeting && (
+                      <View style={styles.eventItemRight}>
+                        <BlurredMoney 
+                          amount={event.financials.venueRentalFee + event.financials.incomeFromExtras} 
+                          style={styles.eventItemAmount}
+                        />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+              {filteredEvents.length > upcomingEvents.length && (
+                <TouchableOpacity 
+                  style={styles.viewAllButton}
+                  onPress={() => router.push('/events')}
+                >
+                  <Text style={styles.viewAllButtonText}>View all events</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
+        {stats.onHoldCount > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderRow}>
+                <Clock size={20} color={AutumnColors.terracotta} />
+                <Text style={styles.sectionTitle}>On-Hold Dates</Text>
+              </View>
+              <Text style={styles.sectionCount}>{stats.onHoldCount}</Text>
+            </View>
+            <View style={styles.sectionContent}>
+              <View style={styles.onHoldCard}>
+                <Text style={styles.onHoldCardText}>
+                  You have {stats.onHoldCount} date{stats.onHoldCount !== 1 ? 's' : ''} currently on hold
+                </Text>
+                <TouchableOpacity 
+                  style={styles.viewAllButton}
+                  onPress={() => router.push('/availability')}
+                >
+                  <Text style={styles.viewAllButtonText}>View availability</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <View style={styles.statIconContainer}>
@@ -266,74 +358,7 @@ export default function OverviewScreen() {
           </View>
         )}
 
-        {upcomingEvents.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionHeaderRow}>
-                <Calendar size={20} color={AutumnColors.sage} />
-                <Text style={styles.sectionTitle}>Upcoming Events</Text>
-              </View>
-              <Text style={styles.sectionCount}>{upcomingEvents.length}</Text>
-            </View>
-            <View style={styles.sectionContent}>
-              {upcomingEvents.map((event) => {
-                const isMeeting = event.eventType === 'meetings';
-                return (
-                  <TouchableOpacity
-                    key={event.id}
-                    style={styles.eventItem}
-                    onPress={() => handleEventPress(event)}
-                  >
-                    <View style={styles.eventItemLeft}>
-                      <View style={styles.eventDateBadge}>
-                        <Text style={styles.eventDateMonth}>
-                          {new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}
-                        </Text>
-                        <Text style={styles.eventDateDay}>
-                          {new Date(event.date).getDate()}
-                        </Text>
-                      </View>
-                      <View style={styles.eventItemInfo}>
-                        <Text style={styles.eventItemName}>{event.name}</Text>
-                        <Text style={styles.eventItemType}>
-                          {EVENT_TYPE_LABELS[event.eventType] || event.eventType}
-                        </Text>
-                        {event.timeline && (
-                          <Text style={styles.eventItemTime}>
-                            {event.timeline.startTime} - {event.timeline.endTime}
-                          </Text>
-                        )}
-                        {isMeeting && event.meetingDetails && (
-                          <Text style={styles.eventItemTime}>
-                            {event.meetingDetails.meetingTime}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                    {!isMeeting && (
-                      <View style={styles.eventItemRight}>
-                        <BlurredMoney 
-                          amount={event.financials.venueRentalFee + event.financials.incomeFromExtras} 
-                          style={styles.eventItemAmount}
-                        />
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-              {filteredEvents.length > upcomingEvents.length && (
-                <TouchableOpacity 
-                  style={styles.viewAllButton}
-                  onPress={() => router.push('/events')}
-                >
-                  <Text style={styles.viewAllButtonText}>View all events</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        )}
-
-        {upcomingEvents.length === 0 && (
+        {upcomingEvents.length === 0 && filteredEvents.length === 0 && (
           <View style={styles.emptyState}>
             <Calendar size={48} color={AutumnColors.warmGray} opacity={0.3} />
             <Text style={styles.emptyStateText}>No Upcoming Events</Text>
@@ -656,5 +681,18 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 40,
+  },
+  onHoldCard: {
+    backgroundColor: '#FFF8F0',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E8D7C3',
+  },
+  onHoldCardText: {
+    fontSize: 14,
+    color: Colors.light.text,
+    marginBottom: 12,
+    textAlign: 'center',
   },
 });
