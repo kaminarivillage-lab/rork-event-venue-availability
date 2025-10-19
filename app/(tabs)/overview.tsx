@@ -99,10 +99,14 @@ export default function OverviewScreen() {
   const netProfit = eventFinancials.totalIncome - totalCombinedCosts;
 
   const filteredPendingPayments = useMemo(() => {
-    if (isPlanner && user?.plannerId) {
-      return getPendingPayments.filter(event => event.financials.plannerId === user.plannerId);
-    }
-    return getPendingPayments;
+    const payments = isPlanner && user?.plannerId
+      ? getPendingPayments.filter(event => event.financials.plannerId === user.plannerId)
+      : getPendingPayments;
+    
+    return payments.filter(event => {
+      const totalIncome = event.financials.venueRentalFee + event.financials.incomeFromExtras;
+      return totalIncome > 0;
+    });
   }, [getPendingPayments, isPlanner, user]);
 
   const handleEventPress = (event: VenueEvent) => {
