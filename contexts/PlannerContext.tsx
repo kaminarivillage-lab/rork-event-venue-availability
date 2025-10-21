@@ -13,11 +13,22 @@ export const [PlannerProvider, usePlanners] = createContextHook(() => {
     loadPlanners();
   }, []);
 
+  useEffect(() => {
+    if (!isLoading) {
+      savePlannersToStorage();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planners, isLoading]);
+
   const loadPlanners = async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setPlanners(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        console.log('Loaded planners from storage:', Object.keys(parsed).length);
+        setPlanners(parsed);
+      } else {
+        console.log('No planners found in storage');
       }
     } catch (error) {
       console.error('Error loading planners:', error);
@@ -26,10 +37,20 @@ export const [PlannerProvider, usePlanners] = createContextHook(() => {
     }
   };
 
+  const savePlannersToStorage = async () => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(planners));
+      console.log('Saved planners to storage:', Object.keys(planners).length);
+    } catch (error) {
+      console.error('Error saving planners:', error);
+    }
+  };
+
   const savePlanners = async (newPlanners: Record<string, Planner>) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newPlanners));
       setPlanners(newPlanners);
+      console.log('Planners saved and state updated:', Object.keys(newPlanners).length);
     } catch (error) {
       console.error('Error saving planners:', error);
     }

@@ -13,11 +13,22 @@ export const [VendorProvider, useVendors] = createContextHook(() => {
     loadVendors();
   }, []);
 
+  useEffect(() => {
+    if (isLoaded) {
+      saveVendorsToStorage();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vendors, isLoaded]);
+
   const loadVendors = async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setVendors(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        console.log('Loaded vendors from storage:', Object.keys(parsed).length);
+        setVendors(parsed);
+      } else {
+        console.log('No vendors found in storage');
       }
     } catch (error) {
       console.error('Error loading vendors:', error);
@@ -26,10 +37,20 @@ export const [VendorProvider, useVendors] = createContextHook(() => {
     }
   };
 
+  const saveVendorsToStorage = async () => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(vendors));
+      console.log('Saved vendors to storage:', Object.keys(vendors).length);
+    } catch (error) {
+      console.error('Error saving vendors:', error);
+    }
+  };
+
   const saveVendors = async (newVendors: Record<string, Vendor>) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newVendors));
       setVendors(newVendors);
+      console.log('Vendors saved and state updated:', Object.keys(newVendors).length);
     } catch (error) {
       console.error('Error saving vendors:', error);
     }
