@@ -12,6 +12,7 @@ import {
   Pressable,
   TextInput,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Share2, ChevronLeft, ChevronRight, Circle, Plus } from 'lucide-react-native';
 import { useEvents } from '@/contexts/EventContext';
 import { useVenue } from '@/contexts/VenueContext';
@@ -41,6 +42,7 @@ export default function AvailabilityScreen() {
   const { bookings, holdDuration, getRemainingDays, getDateStatus, setDateStatus, getBookingByDate, getHoldDurationDays } = useVenue();
   const { user, isPlanner, isAdmin } = useAuth();
   const { getPlannerById, getAllPlanners } = usePlanners();
+  const insets = useSafeAreaInsets();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showStatusModal, setShowStatusModal] = useState<boolean>(false);
@@ -315,7 +317,10 @@ export default function AvailabilityScreen() {
   }, [year, month, dateStatuses]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={[styles.contentContainer, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
+    >
       <View style={styles.header}>
         <View style={styles.monthNavigation}>
           <TouchableOpacity

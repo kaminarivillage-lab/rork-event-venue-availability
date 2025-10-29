@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, Switch } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Clock, Share2, Copy, User, Trash2, Eye, EyeOff } from 'lucide-react-native';
 import { AutumnColors } from '@/constants/colors';
 import { useVenue } from '@/contexts/VenueContext';
@@ -15,6 +16,7 @@ export default function SettingsScreen() {
   const { getAllPlanners } = usePlanners();
   const { clearAllEvents, getAllEvents } = useEvents();
   const { isMoneyBlurred, toggleMoneyBlur } = usePrivacy();
+  const insets = useSafeAreaInsets();
   const [days, setDays] = useState<string>(getHoldDurationDays().toString());
   
   const wordpressUrl = `${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8081'}/api/calendar-sync`;
@@ -66,7 +68,10 @@ export default function SettingsScreen() {
 
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+    >
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           {isMoneyBlurred ? (

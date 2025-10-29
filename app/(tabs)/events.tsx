@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Calendar as CalendarIcon, MapPin, Filter } from 'lucide-react-native';
 import { useEvents } from '@/contexts/EventContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +22,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
 export default function EventsScreen() {
   const { getAllEvents } = useEvents();
   const { user, isPlanner } = useAuth();
+  const insets = useSafeAreaInsets();
   const [showAddEvent, setShowAddEvent] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<VenueEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<VenueEvent | null>(null);
@@ -61,7 +63,7 @@ export default function EventsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Upcoming Events</Text>
         {!isPlanner && (

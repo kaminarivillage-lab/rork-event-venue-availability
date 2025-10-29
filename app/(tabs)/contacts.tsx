@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, Edit2, Trash2, Building2, Mail, Phone, Globe, ChevronDown, ChevronUp, Calendar as CalendarIcon, Instagram } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { usePlanners } from '@/contexts/PlannerContext';
@@ -24,6 +25,7 @@ type SegmentType = 'planners' | 'vendors';
 type ViewType = 'manage' | 'stats';
 
 export default function ContactsScreen() {
+  const insets = useSafeAreaInsets();
   const [segment, setSegment] = useState<SegmentType>('planners');
   const [activeTab, setActiveTab] = useState<ViewType>('manage');
   
@@ -506,7 +508,7 @@ export default function ContactsScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.titleContainer}>
           <Text style={styles.title}>Contacts</Text>
           {segment === 'planners' && (

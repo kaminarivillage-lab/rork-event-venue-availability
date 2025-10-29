@@ -9,6 +9,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, TrendingUp, DollarSign, Calendar, TrendingDown, Receipt, Trash2, X, Filter, Edit3, AlertCircle } from 'lucide-react-native';
 import { useEvents } from '@/contexts/EventContext';
 import { useVenue } from '@/contexts/VenueContext';
@@ -193,9 +194,15 @@ export default function DashboardScreen() {
     );
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.container}>
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
               <View style={styles.statIconContainer}>
