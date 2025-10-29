@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivacyProvider } from "@/contexts/PrivacyContext";
 import { PlannerProvider } from "@/contexts/PlannerContext";
 import { VendorProvider } from "@/contexts/VendorContext";
+import { trpc, trpcClient } from "@/lib/trpc";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -30,24 +31,26 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <PrivacyProvider>
-        <AuthProvider>
-          <VenueProvider>
-            <PlannerProvider>
-              <VendorProvider>
-                <EventProvider>
-                  <ExpenseProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <RootLayoutNav />
-                    </GestureHandlerRootView>
-                  </ExpenseProvider>
-                </EventProvider>
-              </VendorProvider>
-            </PlannerProvider>
-          </VenueProvider>
-        </AuthProvider>
-      </PrivacyProvider>
-    </QueryClientProvider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <PrivacyProvider>
+          <AuthProvider>
+            <VenueProvider>
+              <PlannerProvider>
+                <VendorProvider>
+                  <EventProvider>
+                    <ExpenseProvider>
+                      <GestureHandlerRootView style={{ flex: 1 }}>
+                        <RootLayoutNav />
+                      </GestureHandlerRootView>
+                    </ExpenseProvider>
+                  </EventProvider>
+                </VendorProvider>
+              </PlannerProvider>
+            </VenueProvider>
+          </AuthProvider>
+        </PrivacyProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
