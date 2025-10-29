@@ -121,7 +121,7 @@ export default function OverviewScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.welcomeText}>Overview</Text>
-        <Text style={styles.subtitleText}>Your venue at a glance</Text>
+        <Text style={styles.subtitleText}>Your venue at a glonce</Text>
 
         {upcomingEvents.length > 0 && (
           <View style={styles.section}>
