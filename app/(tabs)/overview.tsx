@@ -26,6 +26,7 @@ import { useRouter } from 'expo-router';
 import BlurredMoney from '@/components/BlurredMoney';
 import Colors, { AutumnColors } from '@/constants/colors';
 import { VenueEvent } from '@/types/venue';
+import { trpc } from '@/lib/trpc';
 
 const EVENT_TYPE_LABELS: Record<string, string> = {
   'wedding': 'Wedding',
@@ -113,6 +114,12 @@ export default function OverviewScreen() {
     router.push('/events');
   };
 
+  const testBackendMutation = trpc.example.hi.useMutation();
+
+  const handleTestBackend = () => {
+    testBackendMutation.mutate({ name: 'Venue Manager' });
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -122,6 +129,34 @@ export default function OverviewScreen() {
       >
         <Text style={styles.welcomeText}>Overview</Text>
         <Text style={styles.subtitleText}>Your venue at a glonce</Text>
+
+        <TouchableOpacity
+          style={styles.backendButton}
+          onPress={handleTestBackend}
+          disabled={testBackendMutation.isPending}
+        >
+          <Text style={styles.backendButtonText}>
+            {testBackendMutation.isPending ? 'Testing...' : 'Test Backend'}
+          </Text>
+        </TouchableOpacity>
+
+        {testBackendMutation.isSuccess && (
+          <View style={styles.backendResponse}>
+            <Text style={styles.backendResponseTitle}>Backend Response:</Text>
+            <Text style={styles.backendResponseText}>
+              {JSON.stringify(testBackendMutation.data, null, 2)}
+            </Text>
+          </View>
+        )}
+
+        {testBackendMutation.isError && (
+          <View style={[styles.backendResponse, styles.backendError]}>
+            <Text style={styles.backendResponseTitle}>Error:</Text>
+            <Text style={styles.backendResponseText}>
+              {testBackendMutation.error.message}
+            </Text>
+          </View>
+        )}
 
         {upcomingEvents.length > 0 && (
           <View style={styles.section}>
@@ -698,5 +733,41 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
     marginBottom: 12,
     textAlign: 'center',
+  },
+  backendButton: {
+    backgroundColor: AutumnColors.sage,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  backendButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  backendResponse: {
+    backgroundColor: '#E8F5E9',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#7FA979',
+  },
+  backendError: {
+    backgroundColor: '#FFEBEE',
+    borderColor: '#C17B6B',
+  },
+  backendResponseTitle: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.light.text,
+    marginBottom: 4,
+  },
+  backendResponseText: {
+    fontSize: 11,
+    color: '#5F5F5F',
+    fontFamily: 'monospace',
   },
 });
