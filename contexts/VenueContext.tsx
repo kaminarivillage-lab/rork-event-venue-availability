@@ -30,17 +30,14 @@ export const [VenueProvider, useVenue] = createContextHook(() => {
     loadBookings();
   }, []);
 
-  const saveBookings = useCallback(async () => {
+  const saveBookings = useCallback(async (dataToSave: { bookings: Record<string, DateBooking>; holdDuration: number }) => {
     try {
-      const data = {
-        bookings,
-        holdDuration,
-      };
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      console.log('Saved bookings to storage:', Object.keys(dataToSave.bookings).length);
     } catch (error) {
       console.error('Failed to save bookings:', error);
     }
-  }, [bookings, holdDuration]);
+  }, []);
 
   const checkExpiredHolds = useCallback(() => {
     const now = Date.now();
@@ -70,9 +67,9 @@ export const [VenueProvider, useVenue] = createContextHook(() => {
 
   useEffect(() => {
     if (isLoaded) {
-      saveBookings();
+      saveBookings({ bookings, holdDuration });
     }
-  }, [bookings, isLoaded, saveBookings]);
+  }, [bookings, holdDuration, isLoaded, saveBookings]);
 
   useEffect(() => {
     const interval = setInterval(() => {
