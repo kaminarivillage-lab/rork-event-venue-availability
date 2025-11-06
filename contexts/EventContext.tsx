@@ -1,59 +1,34 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VenueEvent, EventType, WeddingCategory, EventTimeline, EventFinancials, MeetingDetails } from '@/types/venue';
-
-const EVENTS_STORAGE_KEY = '@venue_events';
+import { trpc } from '@/lib/trpc';
 
 export const [EventProvider, useEvents] = createContextHook(() => {
   const [events, setEvents] = useState<Record<string, VenueEvent>>({});
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-  useEffect(() => {
-    loadEvents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const eventsQuery = trpc.calendar.getEvents.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+  
+  const addEventMutation = trpc.calendar.addEvent.useMutation();
+  const updateEventMutation = trpc.calendar.updateEvent.useMutation();
+  const deleteEventMutation = trpc.calendar.deleteEvent.useMutation();
 
   useEffect(() => {
-    if (isLoaded) {
-      saveEvents();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, isLoaded]);
-
-  const loadEvents = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(EVENTS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        console.log('Loaded events from storage:', Object.keys(parsed).length);
-        setEvents(parsed);
-      }
-    } catch (error) {
-      console.error('Failed to load events:', error);
-    } finally {
+    if (eventsQuery.data) {
+      setEvents(eventsQuery.data.events);
       setIsLoaded(true);
     }
-  };
-
-  const saveEvents = async () => {
-    try {
-      await AsyncStorage.setItem(EVENTS_STORAGE_KEY, JSON.stringify(events));
-      console.log('Saved events to storage:', Object.keys(events).length);
-    } catch (error) {
-      console.error('Failed to save events:', error);
-    }
-  };
+  }, [eventsQuery.data]);
 
   const clearAllEvents = useCallback(async () => {
-    try {
-      await AsyncStorage.removeItem(EVENTS_STORAGE_KEY);
-      setEvents({});
-      console.log('All events cleared from storage');
-    } catch (error) {
-      console.error('Failed to clear events:', error);
+    const eventIds = Object.keys(events);
+    for (const id of eventIds) {
+      await deleteEventMutation.mutateAsync({ id });
     }
-  }, []);
+    eventsQuery.refetch();
+  }, [events, deleteEventMutation, eventsQuery]);
 
   const addEvent = useCallback((
     name: string,
@@ -82,51 +57,33 @@ export const [EventProvider, useEvents] = createContextHook(() => {
       updatedAt: Date.now(),
     };
 
-    setEvents(prev => {
-      const updated = {
-        ...prev,
-        [id]: newEvent,
-      };
-      console.log('Event added:', newEvent);
-      console.log('Total events after add:', Object.keys(updated).length);
-      return updated;
+    addEventMutation.mutate(newEvent, {
+      onSuccess: () => {
+        eventsQuery.refetch();
+      },
     });
 
     return id;
-  }, []);
+  }, [addEventMutation, eventsQuery]);
 
   const updateEvent = useCallback((
     id: string,
     updates: Partial<Omit<VenueEvent, 'id' | 'createdAt'>>
   ) => {
-    setEvents(prev => {
-      const existing = prev[id];
-      if (!existing) {
-        console.error('Event not found:', id);
-        return prev;
-      }
-
-      return {
-        ...prev,
-        [id]: {
-          ...existing,
-          ...updates,
-          updatedAt: Date.now(),
-        },
-      };
+    updateEventMutation.mutate({ id, updates }, {
+      onSuccess: () => {
+        eventsQuery.refetch();
+      },
     });
-
-    console.log('Event updated:', id);
-  }, []);
+  }, [updateEventMutation, eventsQuery]);
 
   const deleteEvent = useCallback((id: string) => {
-    console.log('Deleting event:', id);
-    setEvents(prev => {
-      const { [id]: removed, ...rest } = prev;
-      console.log('Event deleted:', id, 'Remaining events:', Object.keys(rest).length);
-      return rest;
+    deleteEventMutation.mutate({ id }, {
+      onSuccess: () => {
+        eventsQuery.refetch();
+      },
     });
-  }, []);
+  }, [deleteEventMutation, eventsQuery]);
 
   const getEventByDate = useCallback((date: string): VenueEvent | undefined => {
     return Object.values(events).find(event => event.date === date);

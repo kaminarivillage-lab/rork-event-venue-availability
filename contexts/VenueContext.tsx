@@ -1,10 +1,9 @@
 import createContextHook from '@nkzw/create-context-hook';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { DateStatus } from '@/constants/colors';
 import { DateBooking } from '@/types/venue';
+import { trpc } from '@/lib/trpc';
 
-const STORAGE_KEY = 'venue_bookings';
 const DEFAULT_HOLD_DURATION = 7 * 24 * 60 * 60 * 1000;
 
 export const [VenueProvider, useVenue] = createContextHook(() => {
@@ -12,32 +11,22 @@ export const [VenueProvider, useVenue] = createContextHook(() => {
   const [holdDuration, setHoldDuration] = useState<number>(DEFAULT_HOLD_DURATION);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-  useEffect(() => {
-    const loadBookings = async () => {
-      try {
-        const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const data = JSON.parse(stored) as { bookings?: Record<string, DateBooking>; holdDuration?: number };
-          setBookings(data.bookings || {});
-          setHoldDuration(data.holdDuration || DEFAULT_HOLD_DURATION);
-        }
-        setIsLoaded(true);
-      } catch (error) {
-        console.error('Failed to load bookings:', error);
-        setIsLoaded(true);
-      }
-    };
-    loadBookings();
-  }, []);
+  const bookingsQuery = trpc.calendar.getBookings.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+  
+  const setBookingMutation = trpc.calendar.setBooking.useMutation();
+  const updateHoldDurationMutation = trpc.calendar.updateHoldDuration.useMutation();
 
-  const saveBookings = useCallback(async (dataToSave: { bookings: Record<string, DateBooking>; holdDuration: number }) => {
-    try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-      console.log('Saved bookings to storage:', Object.keys(dataToSave.bookings).length);
-    } catch (error) {
-      console.error('Failed to save bookings:', error);
+  useEffect(() => {
+    if (bookingsQuery.data) {
+      setBookings(bookingsQuery.data.bookings);
+      setHoldDuration(bookingsQuery.data.holdDuration);
+      setIsLoaded(true);
     }
-  }, []);
+  }, [bookingsQuery.data]);
+
+
 
   const checkExpiredHolds = useCallback(() => {
     const now = Date.now();
@@ -65,11 +54,7 @@ export const [VenueProvider, useVenue] = createContextHook(() => {
 
 
 
-  useEffect(() => {
-    if (isLoaded) {
-      saveBookings({ bookings, holdDuration });
-    }
-  }, [bookings, holdDuration, isLoaded, saveBookings]);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -80,23 +65,21 @@ export const [VenueProvider, useVenue] = createContextHook(() => {
   }, [checkExpiredHolds]);
 
   const setDateStatus = useCallback((dateStr: string, status: DateStatus, note?: string, plannerId?: string, customHoldDays?: number) => {
-    const updated = { ...bookings };
+    const booking: DateBooking = {
+      date: dateStr,
+      status,
+      setAt: Date.now(),
+      note,
+      plannerId,
+      customHoldDays: status === 'on-hold' ? customHoldDays : undefined,
+    };
 
-    if (status === 'available') {
-      delete updated[dateStr];
-    } else {
-      updated[dateStr] = {
-        date: dateStr,
-        status,
-        setAt: Date.now(),
-        note,
-        plannerId,
-        customHoldDays: status === 'on-hold' ? customHoldDays : undefined,
-      };
-    }
-
-    setBookings(updated);
-  }, [bookings]);
+    setBookingMutation.mutate(booking, {
+      onSuccess: () => {
+        bookingsQuery.refetch();
+      },
+    });
+  }, [setBookingMutation, bookingsQuery]);
 
   const getDateStatus = useCallback((dateStr: string): DateStatus => {
     const booking = bookings[dateStr];
@@ -155,9 +138,12 @@ export const [VenueProvider, useVenue] = createContextHook(() => {
   }, [bookings, holdDuration]);
 
   const updateHoldDuration = useCallback((days: number) => {
-    const milliseconds = days * 24 * 60 * 60 * 1000;
-    setHoldDuration(milliseconds);
-  }, []);
+    updateHoldDurationMutation.mutate({ days }, {
+      onSuccess: () => {
+        bookingsQuery.refetch();
+      },
+    });
+  }, [updateHoldDurationMutation, bookingsQuery]);
 
   const getHoldDurationDays = useCallback(() => {
     return Math.round(holdDuration / (24 * 60 * 60 * 1000));
