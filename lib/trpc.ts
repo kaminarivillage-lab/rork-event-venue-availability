@@ -10,8 +10,18 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   }
 
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    const pathname = window.location.pathname;
+    
+    const projectMatch = pathname.match(/\/p\/([^\/]+)/);
+    if (projectMatch) {
+      return `${origin}/p/${projectMatch[1]}`;
+    }
+  }
+
   throw new Error(
-    "No base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL"
+    "No base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL or ensure the app is running on rork.app"
   );
 };
 
