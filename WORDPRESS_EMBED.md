@@ -2,14 +2,23 @@
 
 Your availability calendar is now ready to be embedded in your WordPress site!
 
-## Important: The Working URL
+## Important: The Working URLs
 
-Your embed calendar is accessible at:
+You have two options to access your calendar:
+
+### Option A: Static HTML Embed (Recommended for WordPress)
 ```
 https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html
 ```
+This is a standalone HTML file that works everywhere, including WordPress embeds.
 
-**Test it first**: Open this URL in your browser to make sure it loads before embedding.
+### Option B: React Native Web View
+```
+https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar
+```
+This is the full React Native app view. Use this for native mobile apps or testing.
+
+**Test it first**: Open either URL in your browser to make sure it loads before embedding.
 
 ## How to Embed
 
@@ -70,11 +79,12 @@ You can also update bookings via the tRPC API:
 
 If the calendar doesn't load:
 
-1. **Check the URL**: Make sure you're using the exact URL: `https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar`
+1. **Check the URL**: Make sure you're using the exact URL: `https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html` for WordPress embeds
 2. **Test directly**: Open the URL in your browser first - it should show the calendar
 3. **Clear cache**: Try clearing your browser cache and WordPress cache
 4. **Check iframe support**: Some WordPress themes or security plugins block iframes
-5. **Contact support**: If issues persist, contact Rork support
+5. **Verify backend**: Make sure the backend API is running at `https://rork.app/p/7xafww33jbv9jgp99mphc/api/trpc`
+6. **Contact support**: If issues persist, contact Rork support
 
 ## Need Help?
 
