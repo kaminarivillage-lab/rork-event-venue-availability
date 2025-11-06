@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { ChevronLeft, ChevronRight, Circle } from 'lucide-react-native';
-import { useVenue } from '@/contexts/VenueContext';
-import { useEvents } from '@/contexts/EventContext';
 import { AutumnColors, StatusColors } from '@/constants/colors';
 import { Stack } from 'expo-router';
+import { trpc } from '@/lib/trpc';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -20,12 +20,21 @@ const MONTHS = [
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export default function EmbedCalendarScreen() {
-  const { bookings, holdDuration } = useVenue();
-  const { getAllEvents } = useEvents();
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+  const bookingsQuery = trpc.calendar.getBookings.useQuery(undefined, {
+    refetchInterval: 60000,
+  });
+  const eventsQuery = trpc.calendar.getEvents.useQuery(undefined, {
+    refetchInterval: 60000,
+  });
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  const bookings = bookingsQuery.data?.bookings || {};
+  const holdDuration = bookingsQuery.data?.holdDuration || 7 * 24 * 60 * 60 * 1000;
+  const events = eventsQuery.data?.events || {};
+  const allEvents = Object.values(events);
 
   const dateStatuses = useMemo(() => {
     const statuses = new Map<string, 'available' | 'on-hold' | 'booked'>();
@@ -33,7 +42,10 @@ export default function EmbedCalendarScreen() {
     
     Object.values(bookings).forEach(booking => {
       if (booking.status === 'on-hold') {
-        const expiresAt = booking.setAt + holdDuration;
+        const duration = booking.customHoldDays 
+          ? booking.customHoldDays * 24 * 60 * 60 * 1000 
+          : holdDuration;
+        const expiresAt = booking.setAt + duration;
         if (now <= expiresAt) {
           statuses.set(booking.date, 'on-hold');
         }
@@ -42,12 +54,12 @@ export default function EmbedCalendarScreen() {
       }
     });
     
-    getAllEvents.forEach(event => {
+    allEvents.forEach(event => {
       statuses.set(event.date, 'booked');
     });
     
     return statuses;
-  }, [getAllEvents, bookings, holdDuration]);
+  }, [allEvents, bookings, holdDuration]);
 
   const getDaysInMonth = (year: number, month: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -164,6 +176,38 @@ export default function EmbedCalendarScreen() {
     
     return { available, booked, onHold };
   }, [year, month, dateStatuses, getDateStatusInfo]);
+
+  if (bookingsQuery.isLoading || eventsQuery.isLoading) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.safeContainer, styles.centerContent]}>
+          <ActivityIndicator size="large" color={AutumnColors.brown} />
+          <Text style={styles.loadingText}>Loading calendar...</Text>
+        </View>
+      </>
+    );
+  }
+
+  if (bookingsQuery.error || eventsQuery.error) {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.safeContainer, styles.centerContent]}>
+          <Text style={styles.errorText}>Failed to load calendar</Text>
+          <TouchableOpacity 
+            style={styles.retryButton}
+            onPress={() => {
+              bookingsQuery.refetch();
+              eventsQuery.refetch();
+            }}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  }
 
   return (
     <>
@@ -397,5 +441,30 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 14,
     color: AutumnColors.warmGray,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: AutumnColors.brown,
+  },
+  errorText: {
+    fontSize: 16,
+    color: AutumnColors.rust,
+    marginBottom: 16,
+  },
+  retryButton: {
+    backgroundColor: AutumnColors.sage,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600' as const,
   },
 });
