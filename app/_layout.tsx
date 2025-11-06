@@ -21,7 +21,7 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="embed/calendar" options={{ headerShown: false }} />
+      <Stack.Screen name="calendar-embed" options={{ headerShown: false }} />
     </Stack>
   );
 }
