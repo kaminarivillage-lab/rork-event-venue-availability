@@ -10,7 +10,7 @@ Add this code to any WordPress page or post (in the HTML/Code editor mode):
 
 ```html
 <iframe 
-  src="https://rork.com/p/7xafww33jbv9jgp99mphc/embed/calendar" 
+  src="https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar" 
   width="100%" 
   height="800" 
   frameborder="0"
@@ -60,7 +60,7 @@ If you need to customize the calendar appearance or functionality, you can:
 
 Your calendar embed URL:
 ```
-https://rork.com/p/7xafww33jbv9jgp99mphc/embed/calendar
+https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar
 ```
 
 You can also access it directly in a browser to test before embedding.
