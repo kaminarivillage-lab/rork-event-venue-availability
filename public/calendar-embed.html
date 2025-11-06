@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Availability Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #FAF7F0;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #8B4513;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .month-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .nav-button {
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
+            background: #FFFFFF;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 24px;
+            color: #8B4513;
+        }
+
+        .nav-button:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .month-info {
+            text-align: center;
+        }
+
+        .month-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #8B4513;
+        }
+
+        .year-text {
+            font-size: 16px;
+            color: #8B7355;
+            margin-top: 4px;
+        }
+
+        .stats-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: #FFFFFF;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin: 0 auto 8px;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #8B4513;
+            margin: 8px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #8B7355;
+        }
+
+        .calendar-container {
+            background: #FFFFFF;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .days-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            margin-bottom: 12px;
+        }
+
+        .day-header-cell {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #8B7355;
+        }
+
+        .week-row {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            margin-bottom: 8px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            padding: 2px;
+        }
+
+        .day-content {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #8B4513;
+        }
+
+        .day-available {
+            background-color: #90C695;
+        }
+
+        .day-on-hold {
+            background-color: #F4A460;
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        .day-booked {
+            background-color: #CD5C5C;
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+
+        .day-today {
+            border: 2px solid #DAA520;
+            font-weight: 700;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 24px;
+            padding: 16px 0;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .legend-text {
+            font-size: 14px;
+            color: #8B7355;
+        }
+
+        .error-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #CD5C5C;
+        }
+
+        .retry-button {
+            background-color: #A4B494;
+            color: #FFFFFF;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+
+        .retry-button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p style="color: #8B4513; font-size: 16px;">Loading calendar...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://rork.app/p/7xafww33jbv9jgp99mphc/api/trpc';
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+        const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        let currentDate = new Date();
+        let bookings = {};
+        let events = {};
+        let holdDuration = 7 * 24 * 60 * 60 * 1000;
+
+        async function fetchData() {
+            try {
+                const [bookingsRes, eventsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/calendar.getBookings`),
+                    fetch(`${API_BASE_URL}/calendar.getEvents`)
+                ]);
+
+                const bookingsData = await bookingsRes.json();
+                const eventsData = await eventsRes.json();
+
+                bookings = bookingsData.result?.data?.bookings || {};
+                events = eventsData.result?.data?.events || {};
+                holdDuration = bookingsData.result?.data?.holdDuration || holdDuration;
+
+                renderCalendar();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                renderError();
+            }
+        }
+
+        function getDateStatus(date) {
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const now = Date.now();
+
+            // Check events first
+            if (events[dateStr]) {
+                return 'booked';
+            }
+
+            // Check bookings
+            const booking = bookings[dateStr];
+            if (booking) {
+                if (booking.status === 'on-hold') {
+                    const duration = booking.customHoldDays 
+                        ? booking.customHoldDays * 24 * 60 * 60 * 1000 
+                        : holdDuration;
+                    const expiresAt = booking.setAt + duration;
+                    if (now <= expiresAt) {
+                        return 'on-hold';
+                    }
+                } else if (booking.status === 'booked') {
+                    return 'booked';
+                }
+            }
+
+            return 'available';
+        }
+
+        function getDaysInMonth(year, month) {
+            return new Date(year, month + 1, 0).getDate();
+        }
+
+        function getFirstDayOfMonth(year, month) {
+            return new Date(year, month, 1).getDay();
+        }
+
+        function navigateMonth(direction) {
+            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const daysInMonth = getDaysInMonth(year, month);
+            const firstDay = getFirstDayOfMonth(year, month);
+
+            let availableCount = 0;
+            let bookedCount = 0;
+            let onHoldCount = 0;
+
+            let calendarHTML = `
+                <div class="header">
+                    <div class="month-navigation">
+                        <button class="nav-button" onclick="navigateMonth(-1)">←</button>
+                        <div class="month-info">
+                            <div class="month-text">${MONTHS[month]}</div>
+                            <div class="year-text">${year}</div>
+                        </div>
+                        <button class="nav-button" onclick="navigateMonth(1)">→</button>
+                    </div>
+                </div>
+            `;
+
+            // Calculate stats
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const status = getDateStatus(date);
+                if (status === 'available') availableCount++;
+                else if (status === 'booked') bookedCount++;
+                else if (status === 'on-hold') onHoldCount++;
+            }
+
+            calendarHTML += `
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-circle" style="background-color: #90C695;"></div>
+                        <div class="stat-number">${availableCount}</div>
+                        <div class="stat-label">Available</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-circle" style="background-color: #F4A460;"></div>
+                        <div class="stat-number">${onHoldCount}</div>
+                        <div class="stat-label">On Hold</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-circle" style="background-color: #CD5C5C;"></div>
+                        <div class="stat-number">${bookedCount}</div>
+                        <div class="stat-label">Booked</div>
+                    </div>
+                </div>
+            `;
+
+            calendarHTML += `
+                <div class="calendar-container">
+                    <div class="days-header">
+                        ${DAYS.map(day => `<div class="day-header-cell">${day}</div>`).join('')}
+                    </div>
+            `;
+
+            let dayHTML = '';
+            let dayCount = 0;
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) {
+                dayHTML += '<div class="day-cell"></div>';
+                dayCount++;
+            }
+
+            // Days of month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const status = getDateStatus(date);
+                const isToday = day === today.getDate() && 
+                               month === today.getMonth() && 
+                               year === today.getFullYear();
+
+                const statusClass = `day-${status}`;
+                const todayClass = isToday ? 'day-today' : '';
+
+                dayHTML += `
+                    <div class="day-cell">
+                        <div class="day-content ${statusClass} ${todayClass}">
+                            ${day}
+                        </div>
+                    </div>
+                `;
+                dayCount++;
+
+                if (dayCount % 7 === 0) {
+                    calendarHTML += `<div class="week-row">${dayHTML}</div>`;
+                    dayHTML = '';
+                }
+            }
+
+            // Complete the last week
+            if (dayHTML) {
+                while (dayCount % 7 !== 0) {
+                    dayHTML += '<div class="day-cell"></div>';
+                    dayCount++;
+                }
+                calendarHTML += `<div class="week-row">${dayHTML}</div>`;
+            }
+
+            calendarHTML += `</div>`;
+
+            calendarHTML += `
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #90C695;"></div>
+                        <div class="legend-text">Available</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #F4A460;"></div>
+                        <div class="legend-text">On Hold</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #CD5C5C;"></div>
+                        <div class="legend-text">Booked</div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('app').innerHTML = calendarHTML;
+        }
+
+        function renderError() {
+            document.getElementById('app').innerHTML = `
+                <div class="error-message">
+                    <p style="font-size: 16px; margin-bottom: 16px;">Failed to load calendar</p>
+                    <button class="retry-button" onclick="fetchData()">Retry</button>
+                </div>
+            `;
+        }
+
+        // Initial load
+        fetchData();
+
+        // Refresh every 30 seconds
+        setInterval(fetchData, 30000);
+    </script>
+</body>
+</html>

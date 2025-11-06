@@ -6,7 +6,7 @@ Your availability calendar is now ready to be embedded in your WordPress site!
 
 Your embed calendar is accessible at:
 ```
-https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar
+https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html
 ```
 
 **Test it first**: Open this URL in your browser to make sure it loads before embedding.
@@ -19,7 +19,7 @@ Add this code to any WordPress page or post (in the HTML/Code editor mode):
 
 ```html
 <iframe 
-  src="https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar" 
+  src="https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html" 
   width="100%" 
   height="800" 
   frameborder="0"
