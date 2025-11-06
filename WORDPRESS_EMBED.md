@@ -41,23 +41,30 @@ You can adjust these parameters in the iframe code:
 - `height`: Adjust based on your needs (recommended: 700-900px)
 - `style`: Customize the border, shadow, and other CSS properties
 
-## Data Persistence
+## Data Synchronization
 
-Your calendar data is stored locally using AsyncStorage:
-- ✅ Bookings persist in your mobile app
-- ✅ Updates made in your app are visible in the embedded calendar
-- ✅ Both the app and embed read from the same local storage
+Your calendar data is stored on the server:
+- ✅ Data syncs automatically between your app and the embed
+- ✅ Updates appear in real-time (refreshes every 30 seconds)
+- ✅ Both the app and embed fetch from the same backend API
 
-**Note**: The embed calendar shows the same data you manage in your mobile app's "Availability" tab.
+**Note**: The embed calendar shows the same data you manage in your app.
 
-## Updating Calendar Data
+## Managing Calendar Data
 
-To manage your calendar availability:
+You can update your calendar in two ways:
 
+### Option 1: Mobile App
 1. Open your mobile app at: https://rork.app/p/7xafww33jbv9jgp99mphc
 2. Go to the "Availability" tab
 3. Add or modify bookings
-4. The embedded calendar will show the updated data
+4. Changes sync to the embedded calendar automatically
+
+### Option 2: Backend API
+You can also update bookings via the tRPC API:
+- **Get bookings**: `trpc.calendar.getBookings.query()`
+- **Set booking**: `trpc.calendar.setBooking.mutate({ date, status, ... })`
+- **Get events**: `trpc.calendar.getEvents.query()`
 
 ## Troubleshooting
 

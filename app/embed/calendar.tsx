@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { ChevronLeft, ChevronRight, Circle } from 'lucide-react-native';
 import { AutumnColors, StatusColors } from '@/constants/colors';
 import { Stack } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { trpc } from '@/lib/trpc';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -42,47 +41,25 @@ type VenueEvent = {
 
 export default function EmbedCalendarScreen() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [bookings, setBookings] = useState<Record<string, DateBooking>>({});
-  const [events, setEvents] = useState<Record<string, VenueEvent>>({});
-  const [holdDuration, setHoldDuration] = useState<number>(7 * 24 * 60 * 60 * 1000);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const bookingsQuery = trpc.calendar.getBookings.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+  
+  const eventsQuery = trpc.calendar.getEvents.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
 
-  const loadData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const bookings = bookingsQuery.data?.bookings || {};
+  const events = eventsQuery.data?.events || {};
+  const holdDuration = bookingsQuery.data?.holdDuration || 7 * 24 * 60 * 60 * 1000;
+  
+  const isLoading = bookingsQuery.isLoading || eventsQuery.isLoading;
+  const error = bookingsQuery.error || eventsQuery.error;
 
-      const [bookingsData, eventsData, holdDurationData] = await Promise.all([
-        AsyncStorage.getItem('date_bookings'),
-        AsyncStorage.getItem('venue_events'),
-        AsyncStorage.getItem('hold_duration'),
-      ]);
-
-      if (bookingsData) {
-        const parsed = JSON.parse(bookingsData);
-        setBookings(parsed);
-      }
-
-      if (eventsData) {
-        const parsed = JSON.parse(eventsData);
-        setEvents(parsed);
-      }
-
-      if (holdDurationData) {
-        const parsed = JSON.parse(holdDurationData);
-        setHoldDuration(parsed);
-      }
-    } catch (err) {
-      console.error('Failed to load calendar data:', err);
-      setError('Failed to load calendar data');
-    } finally {
-      setIsLoading(false);
-    }
+  const refetch = () => {
+    bookingsQuery.refetch();
+    eventsQuery.refetch();
   };
 
   const year = currentDate.getFullYear();
@@ -248,10 +225,12 @@ export default function EmbedCalendarScreen() {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.safeContainer, styles.centerContent]}>
-          <Text style={styles.errorText}>{error}</Text>
+          <Text style={styles.errorText}>
+            {error instanceof Error ? error.message : 'Failed to load calendar'}
+          </Text>
           <TouchableOpacity 
             style={styles.retryButton}
-            onPress={loadData}
+            onPress={refetch}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
