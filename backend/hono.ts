@@ -22,7 +22,7 @@ app.get("/", (c) => {
   return c.json({ status: "ok", message: "API is running" });
 });
 
-app.get("/public/calendar-embed.html", async (c) => {
+app.get("/calendar-embed", async (c) => {
   try {
     const html = await readFile(join(process.cwd(), "public", "calendar-embed.html"), "utf-8");
     return c.html(html);

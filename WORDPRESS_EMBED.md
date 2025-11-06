@@ -8,7 +8,7 @@ You have two options to access your calendar:
 
 ### Option A: Static HTML Embed (Recommended for WordPress)
 ```
-https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html
+https://rork.app/p/7xafww33jbv9jgp99mphc/api/calendar-embed
 ```
 This is a standalone HTML file that works everywhere, including WordPress embeds.
 
@@ -28,7 +28,7 @@ Add this code to any WordPress page or post (in the HTML/Code editor mode):
 
 ```html
 <iframe 
-  src="https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html" 
+  src="https://rork.app/p/7xafww33jbv9jgp99mphc/api/calendar-embed" 
   width="100%" 
   height="800" 
   frameborder="0"
@@ -79,7 +79,7 @@ You can also update bookings via the tRPC API:
 
 If the calendar doesn't load:
 
-1. **Check the URL**: Make sure you're using the exact URL: `https://rork.app/p/7xafww33jbv9jgp99mphc/public/calendar-embed.html` for WordPress embeds
+1. **Check the URL**: Make sure you're using the exact URL: `https://rork.app/p/7xafww33jbv9jgp99mphc/api/calendar-embed` for WordPress embeds
 2. **Test directly**: Open the URL in your browser first - it should show the calendar
 3. **Clear cache**: Try clearing your browser cache and WordPress cache
 4. **Check iframe support**: Some WordPress themes or security plugins block iframes
