@@ -22,7 +22,7 @@ import { useExpenses } from '@/contexts/ExpenseContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlanners } from '@/contexts/PlannerContext';
 import { useVendors } from '@/contexts/VendorContext';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import BlurredMoney from '@/components/BlurredMoney';
 import Colors, { AutumnColors } from '@/constants/colors';
 import { VenueEvent } from '@/types/venue';
@@ -128,7 +128,14 @@ export default function OverviewScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={styles.welcomeText}>Overview</Text>
-        <Text style={styles.subtitleText}>Your venue at a glonce</Text>
+        <Text style={styles.subtitleText}>Your venue at a glance</Text>
+
+        <Link href="/embed/calendar" asChild>
+          <TouchableOpacity style={styles.embedButton}>
+            <Calendar size={20} color="#FFFFFF" />
+            <Text style={styles.embedButtonText}>View Embeddable Calendar</Text>
+          </TouchableOpacity>
+        </Link>
 
         <TouchableOpacity
           style={styles.backendButton}
@@ -769,5 +776,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#5F5F5F',
     fontFamily: 'monospace',
+  },
+  embedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.light.tint,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  embedButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
 });
