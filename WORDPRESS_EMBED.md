@@ -4,13 +4,25 @@ Your availability calendar is now ready to be embedded in your WordPress site!
 
 ## How to Embed
 
-### Option 1: Using an iframe (Easiest)
+### Option 1: Using an iframe (Recommended)
 
 Add this code to any WordPress page or post (in the HTML/Code editor mode):
 
+**Try this URL format first:**
 ```html
 <iframe 
-  src="https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar" 
+  src="https://rork.app/p/7xafww33jbv9jgp99mphc?route=/embed/calendar" 
+  width="100%" 
+  height="800" 
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+></iframe>
+```
+
+**If that doesn't work, try this alternative:**
+```html
+<iframe 
+  src="https://rork.app/p/7xafww33jbv9jgp99mphc#embed/calendar" 
   width="100%" 
   height="800" 
   frameborder="0"
@@ -58,9 +70,30 @@ If you need to customize the calendar appearance or functionality, you can:
 
 ## URL Reference
 
-Your calendar embed URL:
+Your calendar embed URLs to try:
+
+**Option 1 (Query Parameter):**
+```
+https://rork.app/p/7xafww33jbv9jgp99mphc?route=/embed/calendar
+```
+
+**Option 2 (Hash Routing):**
+```
+https://rork.app/p/7xafww33jbv9jgp99mphc#embed/calendar
+```
+
+**Option 3 (Direct Path - may need deployment):**
 ```
 https://rork.app/p/7xafww33jbv9jgp99mphc/embed/calendar
 ```
 
-You can also access it directly in a browser to test before embedding.
+Test these URLs directly in your browser first to see which one works, then use that in your iframe.
+
+## Troubleshooting 404 Errors
+
+If you're getting 404 errors:
+
+1. **Try different URL formats** - Test all three URL options above in your browser
+2. **Check if app is deployed** - The embed page needs to be part of the deployed web build
+3. **Use hash routing** - Expo Router on web often uses hash-based routing (#) for client-side navigation
+4. **Contact support** - If none work, the deployment configuration may need adjustment
