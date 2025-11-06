@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { ChevronLeft, ChevronRight, Circle } from 'lucide-react-native';
 import { AutumnColors, StatusColors } from '@/constants/colors';
 import { Stack } from 'expo-router';
-import { trpc } from '@/lib/trpc';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -19,21 +20,74 @@ const MONTHS = [
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+type DateBooking = {
+  date: string;
+  status: 'available' | 'on-hold' | 'booked';
+  setAt: number;
+  note?: string;
+  eventId?: string;
+  plannerId?: string;
+  customHoldDays?: number;
+};
+
+type VenueEvent = {
+  id: string;
+  name: string;
+  date: string;
+  eventType: string;
+  createdAt: number;
+  updatedAt: number;
+  [key: string]: any;
+};
+
 export default function EmbedCalendarScreen() {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const bookingsQuery = trpc.calendar.getBookings.useQuery(undefined, {
-    refetchInterval: 60000,
-  });
-  const eventsQuery = trpc.calendar.getEvents.useQuery(undefined, {
-    refetchInterval: 60000,
-  });
+  const [bookings, setBookings] = useState<Record<string, DateBooking>>({});
+  const [events, setEvents] = useState<Record<string, VenueEvent>>({});
+  const [holdDuration, setHoldDuration] = useState<number>(7 * 24 * 60 * 60 * 1000);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const [bookingsData, eventsData, holdDurationData] = await Promise.all([
+        AsyncStorage.getItem('date_bookings'),
+        AsyncStorage.getItem('venue_events'),
+        AsyncStorage.getItem('hold_duration'),
+      ]);
+
+      if (bookingsData) {
+        const parsed = JSON.parse(bookingsData);
+        setBookings(parsed);
+      }
+
+      if (eventsData) {
+        const parsed = JSON.parse(eventsData);
+        setEvents(parsed);
+      }
+
+      if (holdDurationData) {
+        const parsed = JSON.parse(holdDurationData);
+        setHoldDuration(parsed);
+      }
+    } catch (err) {
+      console.error('Failed to load calendar data:', err);
+      setError('Failed to load calendar data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const bookings = bookingsQuery.data?.bookings || {};
-  const holdDuration = bookingsQuery.data?.holdDuration || 7 * 24 * 60 * 60 * 1000;
-  const events = eventsQuery.data?.events || {};
   const allEvents = Object.values(events);
 
   const dateStatuses = useMemo(() => {
@@ -177,7 +231,7 @@ export default function EmbedCalendarScreen() {
     return { available, booked, onHold };
   }, [year, month, dateStatuses, getDateStatusInfo]);
 
-  if (bookingsQuery.isLoading || eventsQuery.isLoading) {
+  if (isLoading) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
@@ -189,18 +243,15 @@ export default function EmbedCalendarScreen() {
     );
   }
 
-  if (bookingsQuery.error || eventsQuery.error) {
+  if (error) {
     return (
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <View style={[styles.safeContainer, styles.centerContent]}>
-          <Text style={styles.errorText}>Failed to load calendar</Text>
+          <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity 
             style={styles.retryButton}
-            onPress={() => {
-              bookingsQuery.refetch();
-              eventsQuery.refetch();
-            }}
+            onPress={loadData}
           >
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
